@@ -69,3 +69,19 @@
 
   };
 };
+
+&spim0 {
+    status = "disabled";
+};
+&spis0 {
+    status = "disabled";
+};
+&twi0 {
+    status = "disabled";
+};
+&twim0 {
+    status = "disabled";
+};
+&twis0 {
+    status = "disabled";
+};
