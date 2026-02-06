@@ -1,6 +1,4 @@
 /*
- * Copyright (c) 2020 ZMK Contributors
- *
  * SPDX-License-Identifier: MIT
  */
 
@@ -21,31 +19,19 @@
         ;
 };
 
-/* ---------------------------------------------------------
- * Trackball (RIGHT only)
- *  - TWIM0(i2c0) と SPIM0(spi0) の衝突回避のため SPIM1 を使う
- *  - “&spi1” が効かない環境があるので、実体ノードを直指定する
- * --------------------------------------------------------- */
-
-/* SPIM1 実体（nRF52840: 0x40004000 が SPIM1） */
-&{/soc/spi@40004000} {
-    status = "okay";
-
-    /* CS/IRQ はあなたの配線のまま */
+/* ---- Trackball (PMW3360) ---- */
+/* spi0 は既存定義を使う。overlayでは status/pinctrl を触らない */
+&spi0 {
     cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
 
     trackball: trackball@0 {
-        status = "okay";
         compatible = "pixart,pmw3360";
         reg = <0>;
-        spi-max-frequency = <2000000>;
-        irq-gpios = <&gpio0 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-    };
-};
 
- / {
-    trackball_listener {
-        compatible = "zmk,input-listener";
-        device = <&trackball>;
+        /* まずは低速で安定させる（配線で死にやすい） */
+        spi-max-frequency = <1000000>;
+
+        /* IRQは極性が合わないと「無反応」になるのでまずHIGH側で試す */
+        irq-gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
     };
 };
