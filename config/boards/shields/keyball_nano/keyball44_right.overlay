@@ -21,15 +21,45 @@
         ;
 };
 
-/* --- Trackball (RIGHT only) --- */
+/* ---------------------------------------------------------
+ * Trackball (RIGHT only)
+ *  - SPI を有効化する場合、nrf-spim は pinctrl-* が必須（Zephyr 3.5+）
+ *  - ここで spi0 の pinctrl を定義して必須条件を満たす
+ * --------------------------------------------------------- */
+
+&pinctrl {
+    spi0_default: spi0_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 1, 13)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 10)>,
+                    <NRF_PSEL(SPIM_MISO, 1, 11)>;
+        };
+    };
+
+    spi0_sleep: spi0_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 1, 13)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 10)>,
+                    <NRF_PSEL(SPIM_MISO, 1, 11)>;
+            low-power-enable;
+        };
+    };
+};
+
 &spi0 {
     status = "okay";
+
+    /* Zephyr の nrf-spim binding が必須とする項目 */
+    pinctrl-0 = <&spi0_default>;
+    pinctrl-1 = <&spi0_sleep>;
+    pinctrl-names = "default", "sleep";
+
     cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
 
     trackball: trackball@0 {
         status = "okay";
 
-        /* ここが超重要：zmk-pmw3360-driver が拾う互換文字列 */
+        /* zmk-pmw3360-driver が拾う compatible */
         compatible = "pixart,pmw3360";
 
         reg = <0>;
@@ -38,14 +68,9 @@
     };
 };
 
- / {
+/ {
     trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
     };
 };
-
-/*
- * ここから下は「絶対にビルドを落とさない」ために一旦削除。
- * トラックボール設定は keyball44.dtsi 側に寄せる（= overlayでは触らない）。
- */
