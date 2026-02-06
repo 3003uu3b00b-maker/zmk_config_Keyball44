@@ -23,52 +23,27 @@
 
 /* ---------------------------------------------------------
  * Trackball (RIGHT only)
- *  - SPI を有効化する場合、nrf-spim は pinctrl-* が必須（Zephyr 3.5+）
- *  - ここで spi0 の pinctrl を定義して必須条件を満たす
+ *  - TWIM0(i2c0) と SPIM0(spi0) の衝突回避のため SPIM1 を使う
+ *  - “&spi1” が効かない環境があるので、実体ノードを直指定する
  * --------------------------------------------------------- */
 
-&pinctrl {
-    spi0_default: spi0_default {
-        group1 {
-            psels = <NRF_PSEL(SPIM_SCK, 1, 13)>,
-                    <NRF_PSEL(SPIM_MOSI, 0, 10)>,
-                    <NRF_PSEL(SPIM_MISO, 1, 11)>;
-        };
-    };
-
-    spi0_sleep: spi0_sleep {
-        group1 {
-            psels = <NRF_PSEL(SPIM_SCK, 1, 13)>,
-                    <NRF_PSEL(SPIM_MOSI, 0, 10)>,
-                    <NRF_PSEL(SPIM_MISO, 1, 11)>;
-            low-power-enable;
-        };
-    };
-};
-
-&spi0 {
+/* SPIM1 実体（nRF52840: 0x40004000 が SPIM1） */
+&{/soc/spi@40004000} {
     status = "okay";
 
-    /* Zephyr の nrf-spim binding が必須とする項目 */
-    pinctrl-0 = <&spi0_default>;
-    pinctrl-1 = <&spi0_sleep>;
-    pinctrl-names = "default", "sleep";
-
+    /* CS/IRQ はあなたの配線のまま */
     cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
 
     trackball: trackball@0 {
         status = "okay";
-
-        /* zmk-pmw3360-driver が拾う compatible */
         compatible = "pixart,pmw3360";
-
         reg = <0>;
         spi-max-frequency = <2000000>;
         irq-gpios = <&gpio0 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
     };
 };
 
-/ {
+ / {
     trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
