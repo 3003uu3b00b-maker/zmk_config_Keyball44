@@ -21,6 +21,30 @@
         ;
 };
 
+/* --- Trackball (RIGHT only) --- */
+&spi0 {
+    status = "okay";
+    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+
+    trackball: trackball@0 {
+        status = "okay";
+
+        /* ここが超重要：zmk-pmw3360-driver が拾う互換文字列 */
+        compatible = "pixart,pmw3360";
+
+        reg = <0>;
+        spi-max-frequency = <2000000>;
+        irq-gpios = <&gpio0 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+    };
+};
+
+ / {
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&trackball>;
+    };
+};
+
 /*
  * ここから下は「絶対にビルドを落とさない」ために一旦削除。
  * トラックボール設定は keyball44.dtsi 側に寄せる（= overlayでは触らない）。
