@@ -1,26 +1,92 @@
-/* ---- Trackball (PMW3360) ---- */
+/*
+ * SPDX-License-Identifier: MIT
+ */
 
-/* 0番インスタンスのI2Cを止める（存在するものだけ書く） */
-&i2c0 { status = "disabled"; };
+#include "keyball44.dtsi"
 
-/* SPIM0 を使う（これだけ okay にする） */
-&spim0 {
-  status = "okay";
+/* 右手側の列オフセット（あなたの既存設定に合わせて） */
+&default_transform {
+    col-offset = <6>;
+};
 
-  /* もし pinctrl が必要なら、keyball44.dtsi 側に定義した pinctrl を指定 */
-  /* pinctrl-0 = <&spi0_default>; */
-  /* pinctrl-1 = <&spi0_sleep>; */
-  /* pinctrl-names = "default", "sleep"; */
+/* 右手側の列GPIO（あなたの既存設定に合わせて） */
+&kscan0 {
+    col-gpios
+        = <&pro_micro 4 GPIO_ACTIVE_HIGH>
+        , <&pro_micro 5 GPIO_ACTIVE_HIGH>
+        , <&pro_micro 6 GPIO_ACTIVE_HIGH>
+        , <&pro_micro 7 GPIO_ACTIVE_HIGH>
+        , <&pro_micro 8 GPIO_ACTIVE_HIGH>
+        , <&pro_micro 9 GPIO_ACTIVE_HIGH>
+        ;
+};
 
-  cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+/* =========================================================
+ * Trackball (PMW3360) : 右側だけに載せる
+ *  - keyball44.dtsi には書かない
+ *  - 左側overlayには書かない
+ * ========================================================= */
 
-  trackball: trackball@0 {
-    compatible = "pixart,pmw3360";
-    reg = <0>;
+/* SPI0インスタンスに「SPI系が複数okay」だとZephyrが落ちるので、
+ * ここでは spi0 を使う前提で「spi0だけ使う」構成にする。
+ * ※もしあなたの環境が spi1 で組まれているなら &spi1 に変える
+ */
 
-    spi-max-frequency = <1000000>;
+/* --- SPI0 を有効化（pinctrlは shield側で定義するのが安全） --- */
+&pinctrl {
+    spi0_default: spi0_default {
+        group1 {
+            /* ★ここを配線に合わせて変更★ */
+            psels = <
+                NRF_PSEL(SPIM_SCK,  0, 13)
+                NRF_PSEL(SPIM_MOSI, 0, 15)
+                NRF_PSEL(SPIM_MISO, 0, 14)
+            >;
+        };
+    };
 
-    /* まずは“元の定番”に戻した方が動作確認しやすい */
-    irq-gpios = <&gpio0 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-  };
+    spi0_sleep: spi0_sleep {
+        group1 {
+            psels = <
+                NRF_PSEL(SPIM_SCK,  0, 13)
+                NRF_PSEL(SPIM_MOSI, 0, 15)
+                NRF_PSEL(SPIM_MISO, 0, 14)
+            >;
+            low-power-enable;
+        };
+    };
+};
+
+&spi0 {
+    status = "okay";
+    compatible = "nordic,nrf-spim";
+    pinctrl-0 = <&spi0_default>;
+    pinctrl-1 = <&spi0_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    /* ★ここを配線に合わせて変更（CS）★ */
+    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+
+    trackball: trackball@0 {
+        status = "okay";
+        compatible = "pixart,pmw3360";
+        reg = <0>;
+
+        /* まずは低速が安定（動いたら上げる） */
+        spi-max-frequency = <1000000>;
+
+        /* ★ここを配線に合わせて変更（IRQ）★
+         * まずは ACTIVE_LOW + PULL_UP が一般的
+         * 無反応なら ACTIVE_HIGH + PULL_DOWN も試す
+         */
+        irq-gpios = <&gpio0 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+    };
+};
+
+/* ZMKに「このデバイスの入力をHIDに流せ」と伝える */
+ / {
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&trackball>;
+    };
 };
