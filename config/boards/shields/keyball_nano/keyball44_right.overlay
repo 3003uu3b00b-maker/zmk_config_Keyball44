@@ -73,7 +73,7 @@
         spi-max-frequency = <1000000>;
 
         /* IRQ */
-       irq-gpios = <&pro_micro 1 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;  // pro_micro 1 = P0.6
+       irq-gpios = <&pro_micro 0 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;  // pro_micro 0 = P0.8
 
     };
 };
