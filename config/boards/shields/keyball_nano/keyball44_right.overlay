@@ -35,3 +35,18 @@
         irq-gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
     };
 };
+/* 0番インスタンスのI2C系を必ず無効化 */
+&i2c0 { status = "disabled"; };
+&twim0 { status = "disabled"; };
+&twi0  { status = "disabled"; };
+&twis0 { status = "disabled"; };
+
+/* 0番インスタンスのSPI系は “どれか1つだけ” をokay */
+&spi0  { status = "disabled"; };
+&spis0 { status = "disabled"; };
+
+/* ★これを使う：SPIM0（推奨） */
+&spim0 {
+  status = "okay";
+  /* pinctrl-0/1 と cs-gpios、trackball@0 をここに */
+};
