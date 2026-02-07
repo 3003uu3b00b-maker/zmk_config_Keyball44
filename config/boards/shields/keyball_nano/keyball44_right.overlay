@@ -61,7 +61,7 @@
     pinctrl-names = "default", "sleep";
 
     /* CS ピン */
-    cs-gpios = <&pro_micro 7 GPIO_ACTIVE_LOW>;  // pro_micro 7 = P0.11（zephyr.dtsのmapに出てる）
+    cs-gpios = <&pro_micro 10 GPIO_ACTIVE_LOW>; // pro_micro 10 = P0.9
 
 
     trackball: trackball@0 {
