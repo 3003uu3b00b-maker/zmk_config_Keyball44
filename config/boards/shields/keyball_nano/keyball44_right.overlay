@@ -61,7 +61,7 @@
     pinctrl-names = "default", "sleep";
 
     /* CS ピン */
-    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+    cs-gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;  // P0.10
 
     trackball: trackball@0 {
         status = "okay";
